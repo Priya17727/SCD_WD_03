@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quiz</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+      transition: all 0.3s ease-in-out;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Ubuntu', sans-serif;
+      background: linear-gradient(135deg, #fc466b, #3f5efb);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding: 20px;
+      user-select: none;
+    }
+
+    .quiz-container {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(18px);
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      max-width: 650px;
+      width: 100%;
+      padding: 50px 40px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2.8rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #fefefe;
+      text-shadow: 0 0 10px rgba(0,0,0,0.4);
+    }
+
+    #progress-bar {
+      height: 10px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+      margin: 20px 0 30px;
+      overflow: hidden;
+    }
+
+    #progress-bar > div {
+      height: 100%;
+      width: 0%;
+      background: #00ffe7;
+      border-radius: 5px;
+      box-shadow: 0 0 10px #00ffe7;
+      transition: width 0.4s ease;
+    }
+
+    #question {
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: #ffeef7;
+      margin-bottom: 25px;
+    }
+
+    #answers button {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 14px 20px;
+      margin: 10px 0;
+      width: 100%;
+      border-radius: 12px;
+      color: #fff;
+      font-size: 1.2rem;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 5px 14px rgba(0, 0, 0, 0.2);
+      text-align: left;
+    }
+
+    #answers button:hover:not(:disabled) {
+      background: #ab47bc;
+      color: #fff;
+      box-shadow: 0 0 16px #ab47bc;
+      transform: translateY(-3px);
+    }
+
+    #answers button.correct {
+      background: #00e676 !important;
+      color: #0f2027 !important;
+      box-shadow: 0 0 14px #00e676 !important;
+    }
+
+    #answers button.wrong {
+      background: #ff1744 !important;
+      color: #fff !important;
+      box-shadow: 0 0 14px #ff1744 !important;
+    }
+
+    #next-btn, #restart-btn {
+      background: #00ffe7;
+      color: #001f2d;
+      font-weight: 600;
+      font-size: 1.1rem;
+      border: none;
+      padding: 14px 32px;
+      margin-top: 30px;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 6px 18px #00ffe7;
+    }
+
+    #next-btn:hover, #restart-btn:hover {
+      background: #00dacb;
+      box-shadow: 0 8px 24px #00dacb;
+    }
+
+    #result {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #ffffff;
+      text-shadow: 0 0 12px #00ffe7;
+      margin-top: 40px;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <h1>General Knowledge Quiz Show</h1>
+    <div id="progress-bar"><div></div></div>
+    <p id="question"></p>
+    <div id="answers"></div>
+    <button id="next-btn" disabled>Next</button>
+    <button id="restart-btn" class="hidden">Restart</button>
+    <div id="result" class="hidden"></div>
+  </div>
+
+  <script>
+   const questions = [
+  { question: "Which planet is known as the Red Planet?", answers: ["Earth", "Venus", "Mars", "Jupiter"], correct: 2 },
+  { question: "Who wrote the play 'Romeo and Juliet'?", answers: ["Charles Dickens", "William Shakespeare", "Leo Tolstoy", "Mark Twain"], correct: 1 },
+  { question: "What is the capital of France?", answers: ["Madrid", "Berlin", "Paris", "Lisbon"], correct: 2 },
+  { question: "Which element has the chemical symbol 'O'?", answers: ["Osmium", "Oxygen", "Gold", "Silver"], correct: 1 },
+  { question: "Which language is primarily spoken in Brazil?", answers: ["Spanish", "Portuguese", "French", "English"], correct: 1 },
+  { question: "How many continents are there on Earth?", answers: ["5", "6", "7", "8"], correct: 2 },
+  { question: "In which year did the Titanic sink?", answers: ["1910", "1912", "1915", "1918"], correct: 1 },
+  { question: "Which gas do plants absorb from the atmosphere?", answers: ["Oxygen", "Carbon Dioxide", "Nitrogen", "Helium"], correct: 1 },
+  { question: "Who painted the Mona Lisa?", answers: ["Pablo Picasso", "Leonardo da Vinci", "Vincent van Gogh", "Michelangelo"], correct: 1 },
+  { question: "What is the hardest natural substance on Earth?", answers: ["Iron", "Steel", "Diamond", "Quartz"], correct: 2 }
+];
+
+
+    let currentQuestion = 0;
+    let score = 0;
+
+    const questionEl = document.getElementById("question");
+    const answersEl = document.getElementById("answers");
+    const nextBtn = document.getElementById("next-btn");
+    const restartBtn = document.getElementById("restart-btn");
+    const resultEl = document.getElementById("result");
+    const progressBar = document.querySelector("#progress-bar > div");
+
+    function updateProgress() {
+      progressBar.style.width = `${(currentQuestion / questions.length) * 100}%`;
+    }
+
+    function showQuestion() {
+      updateProgress();
+      nextBtn.disabled = true;
+      questionEl.textContent = questions[currentQuestion].question;
+      answersEl.innerHTML = questions[currentQuestion].answers.map((answer, index) =>
+        `<button onclick="selectAnswer(this, ${index})">${answer}</button>`
+      ).join("");
+    }
+
+    function selectAnswer(button, index) {
+      const correctIndex = questions[currentQuestion].correct;
+      const buttons = answersEl.querySelectorAll("button");
+
+      buttons.forEach((btn, i) => {
+        btn.disabled = true;
+        btn.classList.add(i === correctIndex ? "correct" : "wrong");
+      });
+
+      if (index === correctIndex) score++;
+      nextBtn.disabled = false;
+    }
+
+    nextBtn.onclick = () => {
+      currentQuestion++;
+      if (currentQuestion < questions.length) {
+        showQuestion();
+      } else {
+        showResult();
+      }
+    };
+
+    restartBtn.onclick = () => {
+      currentQuestion = 0;
+      score = 0;
+      resultEl.classList.add("hidden");
+      restartBtn.classList.add("hidden");
+      nextBtn.classList.remove("hidden");
+      showQuestion();
+    };
+
+    function showResult() {
+      progressBar.style.width = "100%";
+      resultEl.innerHTML = `🌟 You scored <strong>${score}</strong> out of <strong>${questions.length}</strong>!`;
+      resultEl.classList.remove("hidden");
+      restartBtn.classList.remove("hidden");
+      nextBtn.classList.add("hidden");
+      answersEl.innerHTML = "";
+      questionEl.textContent = "";
+    }
+
+    showQuestion();
+  </script>
+</body>
+</html>
